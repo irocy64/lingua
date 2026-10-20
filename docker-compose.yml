@@ -1,0 +1,19 @@
+services:
+  lingua:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lingua
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # SQLite 数据库文件位于挂载卷内
+      DATABASE_URL: /app/data/lingua.db
+      AUTH_SECRET: ${AUTH_SECRET:-please-change-this-secret}
+      # 可选：AI 配置（在 .env 或 shell 中提供）
+      AI_API_KEY: ${AI_API_KEY:-}
+      AI_BASE_URL: ${AI_BASE_URL:-https://api.openai.com/v1}
+      AI_MODEL: ${AI_MODEL:-gpt-4o-mini}
+    volumes:
+      - ./data:/app/data

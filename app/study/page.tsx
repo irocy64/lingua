@@ -1,0 +1,25 @@
+import { Suspense } from "react";
+import { redirect } from "next/navigation";
+import { StudySession } from "@/features/study/study-session";
+import { auth } from "@/lib/auth";
+
+export const metadata = {
+  title: "学习",
+};
+
+export const instant = false;
+
+export default async function StudyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ deck?: string }>;
+}) {
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+  const { deck } = await searchParams;
+  return (
+    <Suspense fallback={<p className="py-20 text-center text-slate-500">加载中…</p>}>
+      <StudySession deck={deck} />
+    </Suspense>
+  );
+}

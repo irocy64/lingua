@@ -1,0 +1,46 @@
+import { NextResponse } from "next/server";
+import { z } from "zod";
+import { chatWithTutor } from "@/server/ai-tutor";
+import { isAiConfigured } from "@/lib/ai";
+
+const chatSchema = z.object({
+  lang: z.enum(["en", "ja"]),
+  scenario: z.string().optional(),
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string().min(1),
+      })
+    )
+    .min(1),
+});
+
+export async function POST(request: Request) {
+  if (!isAiConfigured()) {
+    return NextResponse.json(
+      { error: "AI 未配置，请在 .env 中设置 AI_API_KEY（见 .env.example）" },
+      { status: 503 }
+    );
+  }
+
+  const body = await request.json();
+  const parsed = chatSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ error: "invalid request" }, { status: 400 });
+  }
+
+  try {
+    const reply = await chatWithTutor(
+      parsed.data.messages,
+      parsed.data.lang,
+      parsed.data.scenario
+    );
+    return NextResponse.json({ reply });
+  } catch (error) {
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 502 }
+    );
+  }
+}

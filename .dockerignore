@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+npm-debug.log
+README.md
+Dockerfile
+.dockerignore
+docker-compose.yml
+data
+*.db
+*.db-wal
+*.db-shm
+.env
+.vercel
+coverage
