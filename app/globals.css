@@ -24,6 +24,7 @@ html {
 
 body {
   min-height: 100vh;
+  overflow-x: hidden;
   color: var(--foreground);
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   background-color: #04060d;

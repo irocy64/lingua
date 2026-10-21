@@ -11,7 +11,7 @@ export function SiteHeader() {
           <span className="sci-logo">LINGUA</span>
           <span className="sci-tag hidden sm:inline">NEURAL LANGUAGE OS</span>
         </Link>
-        <nav className="flex max-w-full items-center gap-1 overflow-x-auto whitespace-nowrap text-xs sm:text-sm">
+        <nav className="flex min-w-0 max-w-full flex-1 items-center justify-end gap-1 overflow-x-auto whitespace-nowrap text-xs sm:text-sm">
           <NavLinks />
           <UserMenu />
         </nav>
