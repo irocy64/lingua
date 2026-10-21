@@ -31,7 +31,14 @@ jobs:
 
       - name: Report bundle size
         run: |
-          du -sh .open-next
+          du -sh .open-next .open-next/server-functions/default
           ls -lh .open-next/worker.js
           gzip -c .open-next/worker.js | wc -c
           find .open-next/assets -type f | wc -l
+
+      - name: Bundle for Workers (dry run)
+        run: |
+          npx wrangler deploy --dry-run --outdir cf-dist
+          du -sh cf-dist
+          ls -lh cf-dist
+          gzip -c cf-dist/index.js | wc -c
