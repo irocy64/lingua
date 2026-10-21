@@ -2,6 +2,15 @@
 
 以**间隔重复（FSRS）**为核心、覆盖英语与日语**听、说、读、写、背词**的全栈学习应用。
 
+## 线上地址
+
+**https://lingua-irocy64.netlify.app**
+
+- 托管：Netlify（免费 HTTPS 子域名）
+- 数据库：Turso（东京区域，libSQL）
+- 自动部署：推送 `main` 分支后由 GitHub Actions 构建并发布（`.github/workflows/deploy-netlify.yml`）
+- 新用户直接在 `/register` 注册，无需预置账号
+
 ## 功能一览
 
 - **词书与生词本**：内置 CET-6 核心词（35 词）与 JLPT N5 入门词（33 词），支持按词书学习
