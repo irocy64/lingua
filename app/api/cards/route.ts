@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { addCard, findCard } from "@/server/cards";
-import { auth } from "@/lib/auth";
+import { getActiveApiUser } from "@/lib/access";
 
 const addSchema = z.object({
   word: z.string().min(1),
@@ -11,8 +11,8 @@ const addSchema = z.object({
 });
 
 export async function GET(request: Request) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await getActiveApiUser();
+  if (!user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -21,16 +21,19 @@ export async function GET(request: Request) {
   const lang = searchParams.get("lang") as "en" | "ja" | null;
 
   if (!word || !lang) {
-    return NextResponse.json({ error: "word and lang required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "word and lang required" },
+      { status: 400 }
+    );
   }
 
-  const card = await findCard(session.user.id, word, lang);
+  const card = await findCard(user.id, word, lang);
   return NextResponse.json({ card: card ?? null });
 }
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await getActiveApiUser();
+  if (!user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -44,6 +47,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const card = await addCard(session.user.id, parsed.data);
+  const card = await addCard(user.id, parsed.data);
   return NextResponse.json(card, { status: 201 });
 }

@@ -7,6 +7,9 @@ export default function RegisterPage() {
   return (
     <main className="mx-auto flex max-w-sm flex-col px-4 py-16">
       <h1 className="text-2xl font-bold">注册</h1>
+      <p className="mt-2 text-sm text-slate-500">
+        这是私人学习站点，注册后需要管理员审核通过才能使用。
+      </p>
       <div className="mt-6">
         <AuthForm mode="register" />
       </div>

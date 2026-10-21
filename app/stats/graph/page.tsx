@@ -1,16 +1,14 @@
-import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { buildKanjiGraph } from "@/server/vocab-graph";
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/access";
 
 export const metadata = { title: "词汇图谱" };
 export const instant = false;
 
 export default async function VocabGraphPage() {
   await connection();
-  const session = await auth();
-  if (!session?.user) redirect("/login");
-  const groups = await buildKanjiGraph(session.user.id);
+  const user = await requireUser();
+  const groups = await buildKanjiGraph(user.id);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">

@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { getDashboardSummary } from "@/server/stats";
 import { ImportExport } from "@/features/stats/import-export";
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/access";
 
 export const metadata = {
   title: "仪表盘",
@@ -57,9 +56,8 @@ function ProgressBar({
 
 export default async function DashboardPage() {
   await connection();
-  const session = await auth();
-  if (!session?.user) redirect("/login");
-  const s = await getDashboardSummary(session.user.id);
+  const user = await requireUser();
+  const s = await getDashboardSummary(user.id);
   const maxForecast = Math.max(
     1,
     ...s.dueForecast.map((item) => item.count)

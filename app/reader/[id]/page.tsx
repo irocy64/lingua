@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { getText } from "@/server/reader";
 import { ReaderView } from "@/features/reader/reader-view";
-import { auth } from "@/lib/auth";
+import { getCurrentDbUser, requireUser } from "@/lib/access";
 
 export const instant = false;
 
@@ -13,8 +13,11 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const session = await auth();
-  const text = session?.user ? await getText(session.user.id, id) : undefined;
+  const user = await getCurrentDbUser();
+  const text =
+    user && user.status === "active"
+      ? await getText(user.id, id)
+      : undefined;
   return { title: text?.title ?? "阅读" };
 }
 
@@ -24,10 +27,9 @@ export default async function ReaderDetailPage({
   params: Promise<{ id: string }>;
 }) {
   await connection();
-  const session = await auth();
-  if (!session?.user) redirect("/login");
+  const user = await requireUser();
   const { id } = await params;
-  const text = await getText(session.user.id, id);
+  const text = await getText(user.id, id);
   if (!text) notFound();
 
   return (

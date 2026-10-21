@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { ImportForm } from "@/features/reader/import-form";
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/access";
 
 export const metadata = {
   title: "导入文本",
@@ -10,8 +9,7 @@ export const metadata = {
 export const instant = false;
 
 export default async function NewTextPage() {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
+  await requireUser();
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">

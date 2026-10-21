@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { submitReview } from "@/server/study";
-import { auth } from "@/lib/auth";
+import { getActiveApiUser } from "@/lib/access";
 
 const reviewSchema = z.object({
   cardId: z.string().min(1),
@@ -9,8 +9,8 @@ const reviewSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await getActiveApiUser();
+  if (!user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
 
   try {
     const result = await submitReview(
-      session.user.id,
+      user.id,
       parsed.data.cardId,
       parsed.data.grade
     );

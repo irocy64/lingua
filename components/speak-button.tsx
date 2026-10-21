@@ -13,12 +13,15 @@ export function SpeakButton({
   rate,
   size = "md",
   className = "",
+  label,
 }: {
   text: string;
   lang: SpeechLang;
   rate?: number;
   size?: "sm" | "md" | "lg";
   className?: string;
+  /** 无障碍标签；听写模式可传“播放发音”避免泄露答案 */
+  label?: string;
 }) {
   const [speaking, setSpeaking] = useState(false);
 
@@ -34,8 +37,8 @@ export function SpeakButton({
   return (
     <button
       type="button"
-      aria-label={`朗读：${text}`}
-      title="朗读"
+      aria-label={label ?? `朗读：${text}`}
+      title={label ?? "朗读"}
       onClick={(event) => {
         event.stopPropagation();
         setSpeaking(true);

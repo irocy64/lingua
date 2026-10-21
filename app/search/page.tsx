@@ -1,10 +1,9 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { and, eq, inArray, isNull, like, or } from "drizzle-orm";
 import { db } from "@/db";
 import { cards, decks } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/access";
 import { SpeakButton } from "@/components/speak-button";
 import { AddWordButton } from "@/features/search/add-word-button";
 
@@ -29,9 +28,8 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string; lang?: string }>;
 }) {
   await connection();
-  const session = await auth();
-  if (!session?.user) redirect("/login");
-  const userId = session.user.id;
+  const user = await requireUser();
+  const userId = user.id;
 
   const { q = "", lang: rawLang } = await searchParams;
   const query = q.trim();

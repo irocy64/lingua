@@ -14,5 +14,12 @@ const client = createClient({
   authToken: process.env.DATABASE_AUTH_TOKEN,
 });
 
+// 本地 SQLite 并发访问时避免 SQLITE_BUSY（Turso 远程不需要）
+if (url.startsWith("file:")) {
+  void client
+    .batch(["PRAGMA journal_mode = WAL", "PRAGMA busy_timeout = 5000"])
+    .catch(() => undefined);
+}
+
 export const db = drizzle(client, { schema });
 export { schema };

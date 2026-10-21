@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { verifyCredentials } from "@/server/account";
+import { findUserById, verifyCredentials } from "@/server/account";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
@@ -30,12 +30,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async jwt({ token, user }) {
-      if (user) token.uid = user.id;
+      if (user?.id) {
+        token.uid = user.id;
+        const dbUser = await findUserById(user.id);
+        token.status = dbUser?.status ?? "pending";
+        token.role = dbUser?.role ?? "user";
+      }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = (token.uid as string) ?? "";
+        session.user.status = token.status as string | undefined;
+        session.user.role = token.role as string | undefined;
       }
       return session;
     },

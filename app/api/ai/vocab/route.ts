@@ -3,9 +3,10 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { cards } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { getActiveApiUser } from "@/lib/access";
 import { isAiConfigured } from "@/lib/ai";
 import { generateVocabNote, type VocabNote } from "@/server/ai-tutor";
+import { checkAiAccess, recordAiUsage } from "@/server/ai-access";
 
 const schema = z.object({ cardId: z.string().min(1) });
 
@@ -25,8 +26,8 @@ function readCached(raw: string | null): VocabNote | null {
 }
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await getActiveApiUser();
+  if (!user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
     .select()
     .from(cards)
     .where(
-      and(eq(cards.id, parsed.data.cardId), eq(cards.userId, session.user.id))
+      and(eq(cards.id, parsed.data.cardId), eq(cards.userId, user.id))
     );
   const card = rows[0];
   if (!card) {
@@ -58,6 +59,17 @@ export async function POST(request: Request) {
     );
   }
 
+  const access = await checkAiAccess(
+    user.id,
+    user.email ?? null
+  );
+  if (!access.allowed) {
+    return NextResponse.json(
+      { error: access.message },
+      { status: access.status }
+    );
+  }
+
   try {
     const note = await generateVocabNote(
       card.word,
@@ -69,6 +81,7 @@ export async function POST(request: Request) {
       .update(cards)
       .set({ aiNote: JSON.stringify(note), updatedAt: new Date() })
       .where(eq(cards.id, card.id));
+    await recordAiUsage(user.id);
     return NextResponse.json({ note, cached: false });
   } catch (error) {
     return NextResponse.json(

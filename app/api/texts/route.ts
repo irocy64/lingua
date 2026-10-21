@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createText, listTexts } from "@/server/reader";
-import { auth } from "@/lib/auth";
+import { getActiveApiUser } from "@/lib/access";
 
 const createSchema = z.object({
   title: z.string().min(1),
@@ -11,16 +11,16 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await getActiveApiUser();
+  if (!user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  return NextResponse.json(await listTexts(session.user.id));
+  return NextResponse.json(await listTexts(user.id));
 }
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await getActiveApiUser();
+  if (!user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -34,6 +34,6 @@ export async function POST(request: Request) {
     );
   }
 
-  const created = await createText(session.user.id, parsed.data);
+  const created = await createText(user.id, parsed.data);
   return NextResponse.json(created, { status: 201 });
 }

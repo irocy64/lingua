@@ -40,15 +40,22 @@ export async function registerUser(
 
   const passwordHash = await bcrypt.hash(password, 10);
   const id = randomUUID();
+  const ownerEmail = (process.env.OWNER_EMAIL ?? "").trim().toLowerCase();
+  const isOwner = ownerEmail.length > 0 && normalized === ownerEmail;
 
   await db.insert(users).values({
     id,
     email: normalized,
     passwordHash,
     nickname: nickname ?? normalized.split("@")[0],
+    status: isOwner ? "active" : "pending",
+    role: isOwner ? "owner" : "user",
   });
 
-  await provisionUserCards(id);
+  // 待审核用户不预置词书，审批通过后再发放，避免白占存储
+  if (isOwner) {
+    await provisionUserCards(id);
+  }
 
   const created = await findUserByEmail(normalized);
   if (!created) throw new Error("注册失败");

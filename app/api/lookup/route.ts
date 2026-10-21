@@ -1,13 +1,22 @@
 import { NextResponse } from "next/server";
 import { lookupWord } from "@/server/lookup";
+import { getActiveApiUser } from "@/lib/access";
 
 export async function GET(request: Request) {
+  const user = await getActiveApiUser();
+  if (!user) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(request.url);
   const word = searchParams.get("word");
   const lang = searchParams.get("lang") as "en" | "ja" | null;
 
   if (!word || !lang) {
-    return NextResponse.json({ error: "word and lang required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "word and lang required" },
+      { status: 400 }
+    );
   }
 
   try {

@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { connection } from "next/server";
 import { db } from "@/db";
 import { decks, cards } from "@/db/schema";
 import { and, eq, sql } from "drizzle-orm";
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/access";
 import { SpeakButton } from "@/components/speak-button";
 import { ensureDeckCards } from "@/server/decks";
 
@@ -34,9 +34,8 @@ export default async function DeckDetailPage({
   params: Promise<{ id: string }>;
 }) {
   await connection();
-  const session = await auth();
-  if (!session?.user) redirect("/login");
-  const userId = session.user.id;
+  const user = await requireUser();
+  const userId = user.id;
   const { id } = await params;
 
   const [deck] = await db.select().from(decks).where(eq(decks.id, id));

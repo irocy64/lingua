@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
 import { getStudyQueue } from "@/server/study";
-import { auth } from "@/lib/auth";
+import { getActiveApiUser } from "@/lib/access";
 
 export async function GET(request: Request) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await getActiveApiUser();
+  if (!user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
   const { searchParams } = new URL(request.url);
   const deck = searchParams.get("deck") ?? undefined;
-  const queue = await getStudyQueue(session.user.id, deck);
+  const queue = await getStudyQueue(user.id, deck);
   return NextResponse.json(queue);
 }

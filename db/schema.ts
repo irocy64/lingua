@@ -13,6 +13,12 @@ export const users = sqliteTable("users", {
   email: text("email").notNull(),
   passwordHash: text("password_hash"),
   nickname: text("nickname"),
+  // pending：注册后待管理员审核；active：可用；blocked：禁用
+  status: text("status", { enum: ["pending", "active", "blocked"] })
+    .notNull()
+    .default("pending"),
+  // owner：站点所有者，可审批用户
+  role: text("role", { enum: ["owner", "user"] }).notNull().default("user"),
   dailyNewTarget: integer("daily_new_target").notNull().default(15),
   dailyReviewTarget: integer("daily_review_target").notNull().default(100),
   createdAt: integer("created_at", { mode: "timestamp" })
@@ -133,9 +139,26 @@ export const studySessions = sqliteTable("study_sessions", {
   endedAt: integer("ended_at", { mode: "timestamp" }),
 });
 
+// ---------- AI 用量（防滥用 / 配额） ----------
+export const aiUsage = sqliteTable(
+  "ai_usage",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    day: text("day").notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex("ai_usage_user_day_idx").on(table.userId, table.day),
+  ]
+);
+
 export type User = typeof users.$inferSelect;
 export type Deck = typeof decks.$inferSelect;
 export type Card = typeof cards.$inferSelect;
 export type Review = typeof reviews.$inferSelect;
 export type TextMaterial = typeof texts.$inferSelect;
 export type StudySession = typeof studySessions.$inferSelect;
+export type AiUsage = typeof aiUsage.$inferSelect;

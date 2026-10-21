@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { addCard } from "@/server/cards";
-import { auth } from "@/lib/auth";
+import { getActiveApiUser } from "@/lib/access";
 
 const importSchema = z.object({
   tsv: z.string().min(1),
@@ -10,8 +10,8 @@ const importSchema = z.object({
 
 /** 解析 Anki 导出的 TSV（word / reading / meaning / example），导入当前用户生词本 */
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user) {
+  const user = await getActiveApiUser();
+  if (!user) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   for (const line of dataLines) {
     const [word, reading, meaning] = line.split("\t");
     if (!word) continue;
-    await addCard(session.user.id, {
+    await addCard(user.id, {
       word,
       lang: parsed.data.lang,
       reading: reading || undefined,

@@ -89,7 +89,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         disabled={busy}
         className="w-full rounded-lg bg-slate-900 py-2.5 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
       >
-        {busy ? "请稍候…" : mode === "login" ? "登录" : "注册并登录"}
+        {busy ? "请稍候…" : mode === "login" ? "登录" : "注册（需审核）"}
       </button>
     </form>
   );

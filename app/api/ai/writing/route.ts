@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { correctWriting } from "@/server/ai-tutor";
 import { isAiConfigured } from "@/lib/ai";
+import { getActiveApiUser } from "@/lib/access";
+import { checkAiAccess, recordAiUsage } from "@/server/ai-access";
 
 const writingSchema = z.object({
   essay: z.string().min(1),
@@ -10,10 +12,26 @@ const writingSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const user = await getActiveApiUser();
+  if (!user) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
   if (!isAiConfigured()) {
     return NextResponse.json(
       { error: "AI 未配置，请在 .env 中设置 AI_API_KEY（见 .env.example）" },
       { status: 503 }
+    );
+  }
+
+  const access = await checkAiAccess(
+    user.id,
+    user.email ?? null
+  );
+  if (!access.allowed) {
+    return NextResponse.json(
+      { error: access.message },
+      { status: access.status }
     );
   }
 
@@ -29,6 +47,7 @@ export async function POST(request: Request) {
       parsed.data.lang,
       parsed.data.prompt
     );
+    await recordAiUsage(user.id);
     return NextResponse.json({ feedback });
   } catch (error) {
     return NextResponse.json(

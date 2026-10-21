@@ -1,10 +1,15 @@
 import { KanaChart } from "@/features/kana/kana-chart";
+import { requireUser } from "@/lib/access";
 
 export const metadata = {
   title: "假名",
 };
 
-export default function KanaPage() {
+export const instant = false;
+
+export default async function KanaPage() {
+  await requireUser();
+
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-2xl font-bold">日语假名</h1>

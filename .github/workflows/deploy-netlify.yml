@@ -16,6 +16,7 @@ jobs:
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
       DATABASE_AUTH_TOKEN: ${{ secrets.DATABASE_AUTH_TOKEN }}
       AUTH_SECRET: ${{ secrets.AUTH_SECRET }}
+      OWNER_EMAIL: ${{ secrets.OWNER_EMAIL }}
       AI_API_KEY: ${{ secrets.AI_API_KEY }}
       AI_BASE_URL: ${{ secrets.AI_BASE_URL }}
       AI_MODEL: ${{ secrets.AI_MODEL }}

@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { db } from "@/db";
 import { decks } from "@/db/schema";
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/access";
 import {
   getDeckTemplateCounts,
   getUserDeckCounts,
@@ -17,9 +16,8 @@ export const instant = false;
 
 export default async function DecksPage() {
   await connection();
-  const session = await auth();
-  if (!session?.user) redirect("/login");
-  const userId = session.user.id;
+  const user = await requireUser();
+  const userId = user.id;
 
   const [allDecks, templateCounts, joinedCounts] = await Promise.all([
     db.select().from(decks),

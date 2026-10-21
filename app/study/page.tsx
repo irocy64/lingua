@@ -1,7 +1,6 @@
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
 import { StudySession } from "@/features/study/study-session";
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/access";
 import { db } from "@/db";
 import { decks } from "@/db/schema";
 
@@ -16,8 +15,7 @@ export default async function StudyPage({
 }: {
   searchParams: Promise<{ deck?: string }>;
 }) {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
+  await requireUser();
   const { deck } = await searchParams;
   const deckOptions = await db
     .select({ id: decks.id, name: decks.name, language: decks.language })

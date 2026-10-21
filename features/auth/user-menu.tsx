@@ -12,12 +12,22 @@ export function UserMenu() {
 
   if (session?.user) {
     return (
-      <Link
-        href="/settings"
-        className="ml-1 rounded-md bg-slate-100 px-2 py-1 text-slate-700 hover:bg-slate-200"
-      >
-        {session.user.name ?? "账户"}
-      </Link>
+      <div className="ml-1 flex items-center gap-1">
+        {session.user.role === "owner" && (
+          <Link
+            href="/admin/users"
+            className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-100"
+          >
+            管理
+          </Link>
+        )}
+        <Link
+          href="/settings"
+          className="rounded-md bg-slate-100 px-2 py-1 text-slate-700 hover:bg-slate-200"
+        >
+          {session.user.name ?? "账户"}
+        </Link>
+      </div>
     );
   }
 

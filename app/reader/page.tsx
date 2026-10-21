@@ -1,8 +1,7 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { listTexts } from "@/server/reader";
-import { auth } from "@/lib/auth";
+import { requireUser } from "@/lib/access";
 
 export const metadata = {
   title: "阅读",
@@ -12,9 +11,8 @@ export const instant = false;
 
 export default async function ReaderListPage() {
   await connection();
-  const session = await auth();
-  if (!session?.user) redirect("/login");
-  const allTexts = await listTexts(session.user.id);
+  const user = await requireUser();
+  const allTexts = await listTexts(user.id);
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">

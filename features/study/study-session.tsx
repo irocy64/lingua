@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Card } from "@/db/schema";
 import { SpeakButton } from "@/components/speak-button";
+import {
+  AiNoteSection,
+  type AiVocabNote,
+} from "@/features/study/ai-note-section";
 
 type Grade = "again" | "hard" | "good" | "easy";
 
@@ -29,12 +33,6 @@ interface QueueMeta {
 interface QueueData extends QueueMeta {
   newCards: Card[];
   dueCards: Card[];
-}
-
-interface VocabNote {
-  example: string;
-  translation: string;
-  mnemonic: string;
 }
 
 const emptyStats: SessionStats = { newLearned: 0, reviewed: 0, again: 0 };
@@ -87,11 +85,15 @@ export function StudySession({
   const [error, setError] = useState("");
   const [stats, setStats] = useState<SessionStats>(emptyStats);
   const [meta, setMeta] = useState<QueueMeta | null>(null);
-  const [aiNotes, setAiNotes] = useState<Record<string, VocabNote>>({});
+  const [aiNotes, setAiNotes] = useState<Record<string, AiVocabNote>>({});
   const [aiLoadingId, setAiLoadingId] = useState<string | null>(null);
   const [aiError, setAiError] = useState<{ id: string; message: string } | null>(
     null
   );
+  const [mode, setMode] = useState<"recall" | "spell">("recall");
+  const [spellInput, setSpellInput] = useState("");
+  const [spellChecked, setSpellChecked] = useState(false);
+  const spellInputRef = useRef<HTMLInputElement | null>(null);
   const requeuedRef = useRef<Set<string>>(new Set());
 
   const applyQueue = useCallback((data: QueueData) => {
@@ -104,6 +106,8 @@ export function StudySession({
     setQueue(items);
     setIndex(0);
     setFlipped(false);
+    setSpellInput("");
+    setSpellChecked(false);
     setStats(emptyStats);
     setMeta({ targets: data.targets, today: data.today });
   }, []);
@@ -147,6 +151,24 @@ export function StudySession({
 
   const current = queue[index];
   const aiNote = current ? aiNotes[current.card.id] : undefined;
+  const isSpell = mode === "spell";
+  const normalize = (value: string) =>
+    value.trim().toLowerCase().replace(/\s+/g, " ");
+  const spellCorrect = Boolean(
+    current &&
+      spellInput.trim() &&
+      (normalize(spellInput) === normalize(current.card.word) ||
+        (current.card.lang === "ja" &&
+          current.card.reading &&
+          normalize(spellInput) === normalize(current.card.reading)))
+  );
+
+  function changeMode(next: "recall" | "spell") {
+    setMode(next);
+    setFlipped(false);
+    setSpellInput("");
+    setSpellChecked(false);
+  }
 
   const submit = useCallback(
     async (grade: Grade) => {
@@ -177,6 +199,8 @@ export function StudySession({
           ]);
         }
         setFlipped(false);
+        setSpellInput("");
+        setSpellChecked(false);
         setIndex((i) => i + 1);
       } catch (e) {
         setError(`提交失败：${(e as Error).message}`);
@@ -200,7 +224,10 @@ export function StudySession({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "生成失败");
-      setAiNotes((prev) => ({ ...prev, [id]: data.note as VocabNote }));
+      setAiNotes((prev) => ({
+        ...prev,
+        [id]: data.note as AiVocabNote,
+      }));
     } catch (e) {
       setAiError({ id, message: (e as Error).message });
     } finally {
@@ -222,7 +249,9 @@ export function StudySession({
         }
         return;
       }
-      if (!flipped) {
+      if (mode === "spell") {
+        if (!spellChecked) return;
+      } else if (!flipped) {
         if (event.key === " " || event.key === "Enter") {
           event.preventDefault();
           setFlipped(true);
@@ -243,7 +272,16 @@ export function StudySession({
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [current, flipped, loading, submitting, submit, loadQueue]);
+  }, [
+    current,
+    flipped,
+    mode,
+    spellChecked,
+    loading,
+    submitting,
+    submit,
+    loadQueue,
+  ]);
 
   if (loading) {
     return <p className="py-20 text-center text-slate-500">加载中…</p>;
@@ -320,6 +358,32 @@ export function StudySession({
   const liveReviewed = (meta?.today.reviewed ?? 0) + stats.reviewed;
   const progress = queue.length > 0 ? (index / queue.length) * 100 : 0;
 
+  const gradeGrid = (
+    <div className="grid grid-cols-4 gap-2">
+      {gradeButtons.map((b) => (
+        <button
+          key={b.grade}
+          onClick={() => submit(b.grade)}
+          disabled={submitting}
+          className={`rounded-lg py-3 text-sm font-medium text-white disabled:opacity-50 ${b.className}`}
+        >
+          {b.label}
+          <span className="ml-1 text-[10px] opacity-70">{b.hint}</span>
+        </button>
+      ))}
+    </div>
+  );
+
+  const aiSection = (
+    <AiNoteSection
+      lang={current.card.lang}
+      note={aiNote}
+      loading={aiLoadingId === current.card.id}
+      error={aiError?.id === current.card.id ? aiError.message : undefined}
+      onGenerate={loadAiNote}
+    />
+  );
+
   return (
     <div className="mx-auto max-w-xl px-4 py-10">
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -346,6 +410,36 @@ export function StudySession({
         >
           管理词书
         </Link>
+      </div>
+
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="inline-flex rounded-lg border border-slate-200 p-0.5">
+          <button
+            type="button"
+            onClick={() => changeMode("recall")}
+            className={`rounded-md px-3 py-1 text-xs font-medium ${
+              !isSpell
+                ? "bg-slate-900 text-white"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            认词
+          </button>
+          <button
+            type="button"
+            onClick={() => changeMode("spell")}
+            className={`rounded-md px-3 py-1 text-xs font-medium ${
+              isSpell
+                ? "bg-slate-900 text-white"
+                : "text-slate-600 hover:bg-slate-100"
+            }`}
+          >
+            听写
+          </button>
+        </div>
+        <p className="text-[11px] text-slate-400">
+          {isSpell ? "看释义写单词，可点喇叭听发音" : "看单词回忆释义"}
+        </p>
       </div>
 
       <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
@@ -382,84 +476,132 @@ export function StudySession({
       </div>
 
       <div className="rounded-2xl border border-slate-200 p-8">
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-2">
-            <p className="text-4xl font-bold">{current.card.word}</p>
-            <SpeakButton
-              text={current.card.word}
-              lang={current.card.lang}
-              size="lg"
-            />
-          </div>
-          {current.card.reading && (
-            <p className="mt-2 text-lg text-slate-500">{current.card.reading}</p>
-          )}
-        </div>
+        {isSpell ? (
+          <div>
+            <div className="text-center">
+              <p className="text-xs text-slate-400">根据释义写出单词</p>
+              <p className="mt-2 text-2xl font-bold">{current.card.meaning}</p>
+              {current.card.exampleTranslation && (
+                <p className="mt-2 text-sm text-slate-500">
+                  {current.card.exampleTranslation}
+                </p>
+              )}
+              <div className="mt-4 flex justify-center">
+                <SpeakButton
+                  text={current.card.word}
+                  lang={current.card.lang}
+                  rate={0.9}
+                  size="lg"
+                  label="播放发音"
+                />
+              </div>
+            </div>
 
-        {flipped && (
-          <div className="mt-6 border-t border-slate-100 pt-6">
-            <p className="text-lg">{current.card.meaning}</p>
-            {current.card.example && (
-              <div className="mt-4 rounded-lg bg-slate-50 p-4 text-sm">
-                <div className="flex items-start gap-2">
-                  <p className="flex-1">{current.card.example}</p>
+            <div className="mt-6">
+              <input
+                ref={spellInputRef}
+                value={spellInput}
+                onChange={(event) => setSpellInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    if (!spellChecked && spellInput.trim()) {
+                      setSpellChecked(true);
+                      spellInputRef.current?.blur();
+                    }
+                  }
+                }}
+                disabled={spellChecked}
+                placeholder={
+                  current.card.lang === "ja"
+                    ? "输入汉字或假名"
+                    : "输入英文单词"
+                }
+                className="w-full rounded-lg border border-slate-300 px-4 py-3 text-center text-lg disabled:bg-slate-50"
+              />
+            </div>
+
+            {spellChecked && (
+              <div
+                className={`mt-4 rounded-lg p-4 ${
+                  spellCorrect ? "bg-emerald-50" : "bg-rose-50"
+                }`}
+              >
+                <p
+                  className={`text-sm font-medium ${
+                    spellCorrect ? "text-emerald-700" : "text-rose-700"
+                  }`}
+                >
+                  {spellCorrect ? "回答正确" : "再记一下"}
+                </p>
+                <div className="mt-1 flex items-center gap-2">
+                  <p className="text-lg font-semibold">{current.card.word}</p>
                   <SpeakButton
-                    text={current.card.example}
+                    text={current.card.word}
                     lang={current.card.lang}
-                    rate={0.9}
                     size="sm"
                   />
                 </div>
-                {current.card.exampleTranslation && (
-                  <p className="mt-1 text-slate-500">
-                    {current.card.exampleTranslation}
+                {current.card.reading &&
+                  current.card.reading !== current.card.word && (
+                    <p className="text-sm text-slate-500">
+                      {current.card.reading}
+                    </p>
+                  )}
+                {current.card.example && (
+                  <p className="mt-2 text-sm text-slate-600">
+                    {current.card.example}
                   </p>
                 )}
               </div>
             )}
 
-            <div className="mt-4 rounded-lg border border-dashed border-slate-200 p-3">
-              <div className="flex items-center justify-between gap-2">
-                <p className="text-xs font-medium text-slate-500">
-                  ✨ AI 例句 / 助记
-                </p>
-                <button
-                  type="button"
-                  onClick={loadAiNote}
-                  disabled={aiLoadingId === current.card.id}
-                  className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
-                >
-                  {aiLoadingId === current.card.id
-                    ? "生成中…"
-                    : aiNote
-                      ? "重新生成"
-                      : "生成"}
-                </button>
+            {spellChecked && aiSection}
+          </div>
+        ) : (
+          <>
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-2">
+                <p className="text-4xl font-bold">{current.card.word}</p>
+                <SpeakButton
+                  text={current.card.word}
+                  lang={current.card.lang}
+                  size="lg"
+                />
               </div>
-              {aiError?.id === current.card.id && (
-                <p className="mt-2 text-xs text-rose-600">{aiError.message}</p>
-              )}
-              {aiNote && (
-                <div className="mt-2 space-y-1.5 text-sm">
-                  <div className="flex items-start gap-2">
-                    <p className="flex-1">{aiNote.example}</p>
-                    <SpeakButton
-                      text={aiNote.example}
-                      lang={current.card.lang}
-                      rate={0.9}
-                      size="sm"
-                    />
-                  </div>
-                  <p className="text-slate-500">{aiNote.translation}</p>
-                  {aiNote.mnemonic && (
-                    <p className="rounded bg-amber-50 px-2 py-1 text-xs text-amber-800">
-                      💡 {aiNote.mnemonic}
-                    </p>
-                  )}
-                </div>
+              {current.card.reading && (
+                <p className="mt-2 text-lg text-slate-500">
+                  {current.card.reading}
+                </p>
               )}
             </div>
-          </div>
+
+            {flipped && (
+              <div className="mt-6 border-t border-slate-100 pt-6">
+                <p className="text-lg">{current.card.meaning}</p>
+                {current.card.example && (
+                  <div className="mt-4 rounded-lg bg-slate-50 p-4 text-sm">
+                    <div className="flex items-start gap-2">
+                      <p className="flex-1">{current.card.example}</p>
+                      <SpeakButton
+                        text={current.card.example}
+                        lang={current.card.lang}
+                        rate={0.9}
+                        size="sm"
+                      />
+                    </div>
+                    {current.card.exampleTranslation && (
+                      <p className="mt-1 text-slate-500">
+                        {current.card.exampleTranslation}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {aiSection}
+              </div>
+            )}
+          </>
         )}
       </div>
 
@@ -470,7 +612,39 @@ export function StudySession({
       )}
 
       <div className="mt-6">
-        {!flipped ? (
+        {isSpell ? (
+          !spellChecked ? (
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (!spellInput.trim()) return;
+                  setSpellChecked(true);
+                  spellInputRef.current?.blur();
+                }}
+                disabled={!spellInput.trim()}
+                className="flex-1 rounded-lg bg-slate-900 py-3 text-sm font-medium text-white hover:bg-slate-700 disabled:opacity-50"
+              >
+                检查答案（Enter）
+              </button>
+              <button
+                onClick={() => {
+                  setSpellChecked(true);
+                  spellInputRef.current?.blur();
+                }}
+                className="rounded-lg border border-slate-300 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100"
+              >
+                显示答案
+              </button>
+            </div>
+          ) : (
+            <div>
+              {gradeGrid}
+              <p className="mt-2 text-center text-xs text-slate-400">
+                对照答案评分 · 键盘 1-4 快速评价
+              </p>
+            </div>
+          )
+        ) : !flipped ? (
           <button
             onClick={() => setFlipped(true)}
             className="w-full rounded-lg bg-slate-900 py-3 text-sm font-medium text-white hover:bg-slate-700"
@@ -479,19 +653,7 @@ export function StudySession({
           </button>
         ) : (
           <div>
-            <div className="grid grid-cols-4 gap-2">
-              {gradeButtons.map((b) => (
-                <button
-                  key={b.grade}
-                  onClick={() => submit(b.grade)}
-                  disabled={submitting}
-                  className={`rounded-lg py-3 text-sm font-medium text-white disabled:opacity-50 ${b.className}`}
-                >
-                  {b.label}
-                  <span className="ml-1 text-[10px] opacity-70">{b.hint}</span>
-                </button>
-              ))}
-            </div>
+            {gradeGrid}
             <p className="mt-2 text-center text-xs text-slate-400">
               按记忆程度评分 · 键盘 1-4 快速评价
             </p>
