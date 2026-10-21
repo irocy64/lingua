@@ -180,6 +180,32 @@ export default async function DashboardPage() {
       {/* 工具：Anki 互导、词汇图谱 */}
       <div className="mt-6 rounded-xl border border-slate-200 p-6">
         <h2 className="text-sm font-semibold">工具</h2>
+        <div className="mt-4 mb-4 grid gap-2 text-sm sm:grid-cols-4">
+          <Link
+            href="/reading"
+            className="rounded-lg bg-slate-50 px-3 py-2 text-slate-700 hover:bg-slate-100"
+          >
+            外刊阅读
+          </Link>
+          <Link
+            href="/listening"
+            className="rounded-lg bg-slate-50 px-3 py-2 text-slate-700 hover:bg-slate-100"
+          >
+            听力
+          </Link>
+          <Link
+            href="/kana"
+            className="rounded-lg bg-slate-50 px-3 py-2 text-slate-700 hover:bg-slate-100"
+          >
+            假名训练
+          </Link>
+          <Link
+            href="/stats/graph"
+            className="rounded-lg bg-slate-50 px-3 py-2 text-slate-700 hover:bg-slate-100"
+          >
+            词汇图谱
+          </Link>
+        </div>
         <div className="mt-4">
           <ImportExport />
         </div>

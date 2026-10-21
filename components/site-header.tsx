@@ -5,8 +5,10 @@ const navItems = [
   { href: "/dashboard", label: "仪表盘" },
   { href: "/decks", label: "词书" },
   { href: "/search", label: "搜词" },
+  { href: "/reader", label: "精读" },
+  { href: "/reading", label: "外刊" },
+  { href: "/listening", label: "听力" },
   { href: "/kana", label: "假名" },
-  { href: "/reader", label: "阅读" },
   { href: "/practice/chat", label: "AI 练习" },
 ];
 
@@ -20,12 +22,12 @@ export function SiteHeader() {
             英语 · 日语学习平台
           </span>
         </Link>
-        <nav className="flex items-center gap-1 text-sm">
+        <nav className="flex max-w-full items-center gap-1 overflow-x-auto whitespace-nowrap text-xs sm:text-sm">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
-              className="rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+              className="shrink-0 rounded-md px-2 py-1 text-slate-600 hover:bg-slate-100 hover:text-slate-900"
             >
               {item.label}
             </Link>
