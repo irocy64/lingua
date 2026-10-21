@@ -84,7 +84,7 @@ function audioOf(item: XmlNode, link: string): string {
     const url = textOf(node["@_url"] ?? node["@_href"] ?? node["#text"]);
     const type = textOf(node["@_type"]);
     if (url && (type.includes("audio") || /\.(mp3|m4a|ogg|aac)(\?|$)/i.test(url))) {
-      return url;
+      return url.replace(/^http:\/\//i, "https://");
     }
   }
 

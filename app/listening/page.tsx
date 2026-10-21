@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/access";
 import { listeningFeeds, speeches } from "@/lib/feeds";
 import { getFeedItems, type FeedItem } from "@/server/feeds";
 import { AudioPlayer } from "@/features/listening/audio-player";
+import { proxyAudioUrl } from "@/lib/audio";
 
 export const metadata = {
   title: "听力",
@@ -107,7 +108,10 @@ async function PodcastSections() {
                 )}
                 {item.audioUrl && (
                   <div className="mt-3">
-                    <AudioPlayer src={item.audioUrl} title={item.title} />
+                    <AudioPlayer
+                      src={proxyAudioUrl(item.audioUrl)}
+                      title={item.title}
+                    />
                   </div>
                 )}
                 <a

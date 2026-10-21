@@ -101,7 +101,7 @@ export function AudioPlayer({ src, title }: { src: string; title: string }) {
           {rate}x
         </button>
         <span className="ml-auto shrink-0 text-xs tabular-nums text-slate-500">
-          {formatTime(current)} / {formatTime(duration)}
+          {formatTime(current)} / {duration > 0 ? formatTime(duration) : "--:--"}
         </span>
       </div>
 
