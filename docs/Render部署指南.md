@@ -21,19 +21,15 @@ Lingua 已适配 Render Blueprint，仓库里的 `render.yaml` 会创建一个�
 
 https://render.com/deploy?repo=https://github.com/irocy64/lingua
 
-Render 会读取 `render.yaml`，创建 `lingua` 服务。按提示填写环境变量：
+Render 会读取 `render.yaml`，创建 `lingua` 服务。大部分变量已预填，**只需要填一个**：
 
 | 变量 | 值 |
 |---|---|
-| `DATABASE_URL` | 现有 Turso 地址（`libsql://lingua-irocy64.aws-ap-northeast-1.turso.io`） |
 | `DATABASE_AUTH_TOKEN` | `C:\Users\Mayn\Apps\lingua-db-token.txt` 里的 token |
-| `AUTH_SECRET` | 可用 Render 自动生成；或 `C:\Users\Mayn\Apps\lingua-auth-secret.txt` |
-| `OWNER_EMAIL` | `1245411039@qq.com` |
-| `AI_API_KEY` | 现有 DeepSeek key（不填则不启用 AI） |
-| `AI_BASE_URL` | 留空（默认 DeepSeek） |
-| `AI_MODEL` | `deepseek-chat` |
-| `AI_ALLOWED_EMAILS` | `1245411039@qq.com` |
 
+已预填：`DATABASE_URL`、`OWNER_EMAIL`、`AUTH_TRUST_HOST`；`AUTH_SECRET` 由 Render 自动生成。
+
+> AI 变量默认没配，站点可以先正常用；之后在 Render 的 Environment 里补 `AI_API_KEY`、`AI_MODEL=deepseek-chat`、`AI_ALLOWED_EMAILS=1245411039@qq.com` 即可恢复 AI。
 > 不要把 token 提交到 Git；Render 的环境变量是加密存储的。
 
 ## 三、等待构建

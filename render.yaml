@@ -16,22 +16,10 @@ services:
       - key: AUTH_TRUST_HOST
         value: "true"
       - key: DATABASE_URL
-        sync: false
+        value: libsql://lingua-irocy64.aws-ap-northeast-1.turso.io
+      - key: OWNER_EMAIL
+        value: 1245411039@qq.com
+      - key: AUTH_SECRET
+        generateValue: true
       - key: DATABASE_AUTH_TOKEN
         sync: false
-      - key: AUTH_SECRET
-        sync: false
-      - key: OWNER_EMAIL
-        sync: false
-      - key: AI_API_KEY
-        sync: false
-      - key: AI_BASE_URL
-        sync: false
-      - key: AI_MODEL
-        sync: false
-      - key: AI_ALLOWED_EMAILS
-        sync: false
-      - key: AI_DAILY_LIMIT_PER_USER
-        value: "100"
-      - key: AI_DAILY_LIMIT_GLOBAL
-        value: "300"
