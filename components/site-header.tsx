@@ -17,7 +17,7 @@ export function SiteHeader() {
             英语 · 日语学习平台
           </span>
         </Link>
-        <nav className="flex min-w-0 max-w-full flex-1 items-center justify-end gap-1 overflow-x-auto whitespace-nowrap text-xs sm:text-sm">
+        <nav className="flex min-w-0 max-w-full flex-1 items-center justify-start gap-1 overflow-x-auto whitespace-nowrap text-xs sm:justify-end sm:text-sm">
           <NavLinks />
           <UserMenu />
         </nav>
