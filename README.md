@@ -23,8 +23,8 @@
 - **全局搜词**：在 2.37 万词条中按单词、假名或中文释义搜索，结果可直接加入生词本，并可展开 AI 讲解
 - **AI 例句/助记（仅 owner）**：学习卡与搜词结果可生成例句、翻译和记忆提示；已有词已预生成，按卡/模板缓存
 - **智能阅读器**：`Intl.Segmenter` 分词，点击词语查词、一键加入生词本、逐句朗读与 AI 讲解
-- **外刊阅读**：BBC / 卫报 / Guardian Long Read / Japan Times / NHK 每日 RSS，摘要可一键导入精读
-- **听力**：BBC Global News、NPR Planet Money、BBC 6 Minute English 播客，自定义播放器（倍速 / 快进 / 进度），另有 JFK、FDR 公共领域演讲原声
+- **外刊阅读**：BBC / 卫报 / Guardian Long Read / Japan Times / NHK 每日 RSS，摘要可一键导入精读、可直接朗读
+- **听力**：BBC Global News、BBC 6 Minute English、BBC Learning English Conversations 播客，自定义播放器（倍速 / 快进 / 进度），另有 JFK、FDR 公共领域演讲原声
 - **查词**：英语 dictionaryapi.dev、日语 jisho（服务端代理）
 - **AI 能力**（OpenAI 兼容接口）：可选接入 DeepSeek / OpenAI，用于例句助记、精读讲解、口语对话、写作批改；账号白名单 + 用量限额
 - **假名训练**：五十音表（点击发音）+ 罗马音认读测验

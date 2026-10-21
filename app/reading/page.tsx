@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/access";
 import { readingFeeds } from "@/lib/feeds";
 import { getFeedItems, type FeedItem } from "@/server/feeds";
 import { createText } from "@/server/reader";
+import { SpeakButton } from "@/components/speak-button";
 
 export const metadata = {
   title: "外刊阅读",
@@ -144,9 +145,17 @@ export default async function ReadingPage() {
                     </span>
                   </div>
                   {item.summary && (
-                    <p className="mt-2 line-clamp-4 text-sm text-slate-600">
-                      {item.summary}
-                    </p>
+                    <div className="mt-2 flex items-start gap-2">
+                      <p className="line-clamp-4 flex-1 text-sm text-slate-600">
+                        {item.summary}
+                      </p>
+                      <SpeakButton
+                        text={item.summary}
+                        lang={item.lang}
+                        rate={0.95}
+                        size="sm"
+                      />
+                    </div>
                   )}
                   <div className="mt-auto flex items-center justify-between pt-3">
                     <a
