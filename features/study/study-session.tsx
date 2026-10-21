@@ -31,6 +31,12 @@ interface QueueData extends QueueMeta {
   dueCards: Card[];
 }
 
+interface VocabNote {
+  example: string;
+  translation: string;
+  mnemonic: string;
+}
+
 const emptyStats: SessionStats = { newLearned: 0, reviewed: 0, again: 0 };
 
 const gradeButtons: {
@@ -81,6 +87,11 @@ export function StudySession({
   const [error, setError] = useState("");
   const [stats, setStats] = useState<SessionStats>(emptyStats);
   const [meta, setMeta] = useState<QueueMeta | null>(null);
+  const [aiNotes, setAiNotes] = useState<Record<string, VocabNote>>({});
+  const [aiLoadingId, setAiLoadingId] = useState<string | null>(null);
+  const [aiError, setAiError] = useState<{ id: string; message: string } | null>(
+    null
+  );
   const requeuedRef = useRef<Set<string>>(new Set());
 
   const applyQueue = useCallback((data: QueueData) => {
@@ -135,6 +146,7 @@ export function StudySession({
   }, [fetchQueue, applyQueue]);
 
   const current = queue[index];
+  const aiNote = current ? aiNotes[current.card.id] : undefined;
 
   const submit = useCallback(
     async (grade: Grade) => {
@@ -174,6 +186,27 @@ export function StudySession({
     },
     [current, submitting]
   );
+
+  const loadAiNote = useCallback(async () => {
+    if (!current) return;
+    const id = current.card.id;
+    setAiLoadingId(id);
+    setAiError(null);
+    try {
+      const res = await fetch("/api/ai/vocab", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cardId: id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "生成失败");
+      setAiNotes((prev) => ({ ...prev, [id]: data.note as VocabNote }));
+    } catch (e) {
+      setAiError({ id, message: (e as Error).message });
+    } finally {
+      setAiLoadingId(null);
+    }
+  }, [current]);
 
   // 键盘快捷键：空格/回车翻面，1-4 评分
   useEffect(() => {
@@ -384,6 +417,48 @@ export function StudySession({
                 )}
               </div>
             )}
+
+            <div className="mt-4 rounded-lg border border-dashed border-slate-200 p-3">
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs font-medium text-slate-500">
+                  ✨ AI 例句 / 助记
+                </p>
+                <button
+                  type="button"
+                  onClick={loadAiNote}
+                  disabled={aiLoadingId === current.card.id}
+                  className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  {aiLoadingId === current.card.id
+                    ? "生成中…"
+                    : aiNote
+                      ? "重新生成"
+                      : "生成"}
+                </button>
+              </div>
+              {aiError?.id === current.card.id && (
+                <p className="mt-2 text-xs text-rose-600">{aiError.message}</p>
+              )}
+              {aiNote && (
+                <div className="mt-2 space-y-1.5 text-sm">
+                  <div className="flex items-start gap-2">
+                    <p className="flex-1">{aiNote.example}</p>
+                    <SpeakButton
+                      text={aiNote.example}
+                      lang={current.card.lang}
+                      rate={0.9}
+                      size="sm"
+                    />
+                  </div>
+                  <p className="text-slate-500">{aiNote.translation}</p>
+                  {aiNote.mnemonic && (
+                    <p className="rounded bg-amber-50 px-2 py-1 text-xs text-amber-800">
+                      💡 {aiNote.mnemonic}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

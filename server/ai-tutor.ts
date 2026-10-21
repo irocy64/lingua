@@ -88,4 +88,70 @@ export async function correctWriting(
   return chatCompletion(messages, { temperature: 0.3 });
 }
 
+export interface VocabNote {
+  example: string;
+  translation: string;
+  mnemonic: string;
+}
+
+function parseVocabNote(content: string): VocabNote {
+  const cleaned = content
+    .replace(/^```(?:json)?/i, "")
+    .replace(/```$/, "")
+    .trim();
+
+  let data: unknown;
+  try {
+    data = JSON.parse(cleaned);
+  } catch {
+    const match = cleaned.match(/\{[\s\S]*\}/);
+    data = match ? JSON.parse(match[0]) : {};
+  }
+
+  const record = (data ?? {}) as Record<string, unknown>;
+  const pick = (key: string) =>
+    typeof record[key] === "string" ? String(record[key]).trim() : "";
+
+  return {
+    example: pick("example"),
+    translation: pick("translation"),
+    mnemonic: pick("mnemonic"),
+  };
+}
+
+/** AI 例句与助记：为单个词生成一句地道例句、中文翻译和记忆提示 */
+export async function generateVocabNote(
+  word: string,
+  lang: "en" | "ja",
+  meaning?: string | null,
+  reading?: string | null
+): Promise<VocabNote> {
+  const target = languageName[lang];
+  const user = [
+    `请为下面的${target}单词生成记忆卡片内容。`,
+    `单词：${word}`,
+    reading ? `读音：${reading}` : "",
+    meaning ? `释义：${meaning}` : "",
+    `严格返回 JSON 对象，不要输出其他内容：
+{"example":"一句自然、难度中级的${target}例句（必须包含该词的正确形式）","translation":"例句的简体中文翻译","mnemonic":"一句中文助记：优先用词根词缀、常见搭配或使用场景；避免牵强的谐音/倒写，不确定词源时不要编造"}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const messages: ChatMessage[] = [
+    { role: "system", content: teacherSystem(lang) },
+    { role: "user", content: user },
+  ];
+
+  const content = await chatCompletion(messages, {
+    temperature: 0.5,
+    json: true,
+  });
+  const note = parseVocabNote(content);
+  if (!note.example || !note.translation) {
+    throw new Error("AI 返回格式异常，请重试");
+  }
+  return note;
+}
+
 export { isAiConfigured };

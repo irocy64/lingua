@@ -4,6 +4,7 @@ import { UserMenu } from "@/features/auth/user-menu";
 const navItems = [
   { href: "/dashboard", label: "仪表盘" },
   { href: "/decks", label: "词书" },
+  { href: "/search", label: "搜词" },
   { href: "/kana", label: "假名" },
   { href: "/reader", label: "阅读" },
   { href: "/practice/chat", label: "AI 练习" },

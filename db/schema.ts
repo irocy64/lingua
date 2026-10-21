@@ -47,6 +47,8 @@ export const cards = sqliteTable(
     example: text("example"),
     exampleTranslation: text("example_translation"),
     audioUrl: text("audio_url"),
+    // AI 生成的例句/翻译/助记（JSON）
+    aiNote: text("ai_note"),
     lang: text("lang", { enum: ["en", "ja"] }).notNull(),
     // new / learning / mastered / suspended
     state: text("state", { enum: ["new", "learning", "mastered", "suspended"] })
