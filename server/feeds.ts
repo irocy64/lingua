@@ -1,3 +1,4 @@
+import { cacheLife } from "next/cache";
 import { XMLParser } from "fast-xml-parser";
 import type { FeedSource } from "@/lib/feeds";
 
@@ -15,14 +16,6 @@ export interface FeedItem {
   lang: "en" | "ja";
   category: string;
 }
-
-interface CacheEntry {
-  at: number;
-  items: FeedItem[];
-}
-
-const CACHE_TTL = 30 * 60 * 1000;
-const cache = new Map<string, CacheEntry>();
 
 const parser = new XMLParser({
   ignoreAttributes: false,
@@ -220,8 +213,8 @@ export function parseFeedXml(
 }
 
 export async function getFeedItems(source: FeedSource): Promise<FeedItem[]> {
-  const cached = cache.get(source.id);
-  if (cached && Date.now() - cached.at < CACHE_TTL) return cached.items;
+  "use cache";
+  cacheLife({ stale: 300, revalidate: 1800, expire: 3600 });
 
   const withAudio = source.category !== "news" && source.category !== "magazine";
   const response = await fetch(source.url, {
@@ -231,7 +224,7 @@ export async function getFeedItems(source: FeedSource): Promise<FeedItem[]> {
       Accept:
         "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
     },
-    signal: AbortSignal.timeout(25000),
+    signal: AbortSignal.timeout(8000),
     cache: "no-store",
   });
   if (!response.ok) {
@@ -249,6 +242,5 @@ export async function getFeedItems(source: FeedSource): Promise<FeedItem[]> {
   }
 
   const items = parseFeedXml(xml, source, withAudio);
-  cache.set(source.id, { at: Date.now(), items });
   return items;
 }
