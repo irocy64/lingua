@@ -123,6 +123,7 @@ export default async function SearchPage({
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
+      <p className="sci-kicker mb-2">WORD DATABASE</p>
       <h1 className="text-2xl font-bold">搜词</h1>
       <p className="mt-1 text-sm text-slate-600">
         在 2.3 万内置词条中搜索英文单词、日语假名或中文释义，直接加入生词本。

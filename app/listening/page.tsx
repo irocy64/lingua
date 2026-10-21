@@ -151,7 +151,10 @@ export default async function ListeningPage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-bold">听力</h1>
+        <div>
+          <p className="sci-kicker mb-1">AUDIO STREAM</p>
+          <h1 className="text-2xl font-bold">听力</h1>
+        </div>
         <Link href="/reading" className="text-sm text-slate-500 hover:text-slate-800">
           去外刊阅读 →
         </Link>

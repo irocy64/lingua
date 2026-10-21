@@ -27,6 +27,7 @@ export default async function DecksPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
+      <p className="sci-kicker mb-2">LEXICON ARCHIVE</p>
       <h1 className="text-2xl font-bold">词书</h1>
       <p className="mt-1 text-sm text-slate-600">
         选择词书开始学习，日语与英语词书独立推进；按需加载，不占用额外空间。

@@ -65,6 +65,7 @@ export default async function DashboardPage() {
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
+      <p className="sci-kicker mb-2">MISSION CONTROL</p>
       <h1 className="text-2xl font-bold">仪表盘</h1>
 
       {/* 今日任务 */}

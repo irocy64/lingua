@@ -40,6 +40,7 @@ export default async function SettingsPage() {
 
   return (
     <main className="mx-auto max-w-md px-4 py-8">
+      <p className="sci-kicker mb-2">SYSTEM CONFIG</p>
       <h1 className="text-2xl font-bold">设置</h1>
       <p className="mt-2 text-sm text-slate-500">
         登录账号：{user.email}

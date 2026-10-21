@@ -26,6 +26,7 @@ export default function Home() {
       <main className="mx-auto max-w-5xl px-4">
         {/* Hero */}
         <section className="py-16 text-center sm:py-24">
+          <p className="sci-kicker mb-4">LINGUA // NEURAL LANGUAGE OS</p>
           <h1 className="text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
             一个平台，精通英语与日语
           </h1>

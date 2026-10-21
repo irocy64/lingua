@@ -18,7 +18,8 @@ export async function generateMetadata({
 }) {
   const { id } = await params;
   const [deck] = await db.select().from(decks).where(eq(decks.id, id));
-  return { title: deck?.name ?? "词书详情" };
+  if (!deck) notFound();
+  return { title: deck.name };
 }
 
 const stateLabel: Record<string, string> = {

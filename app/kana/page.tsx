@@ -12,6 +12,7 @@ export default async function KanaPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
+      <p className="sci-kicker mb-2">KANA MODULE</p>
       <h1 className="text-2xl font-bold">日语假名</h1>
       <p className="mt-1 text-sm text-slate-600">
         五十音清音表，平假名与片假名对照学习。

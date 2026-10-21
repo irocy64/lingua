@@ -225,7 +225,10 @@ export default async function ReadingPage() {
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="text-2xl font-bold">外刊阅读</h1>
+        <div>
+          <p className="sci-kicker mb-1">INTEL FEED // LIVE</p>
+          <h1 className="text-2xl font-bold">外刊阅读</h1>
+        </div>
         <Link href="/listening" className="text-sm text-slate-500 hover:text-slate-800">
           去听力 →
         </Link>

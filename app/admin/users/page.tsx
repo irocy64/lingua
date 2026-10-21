@@ -57,7 +57,10 @@ export default async function AdminUsersPage() {
   return (
     <main className="mx-auto max-w-4xl px-4 py-8">
       <div className="flex items-baseline justify-between">
-        <h1 className="text-2xl font-bold">用户管理</h1>
+        <div>
+          <p className="sci-kicker mb-1">ACCESS CONTROL</p>
+          <h1 className="text-2xl font-bold">用户管理</h1>
+        </div>
         <p className="text-sm text-slate-500">
           待审核 {pendingCount} 人 · 共 {allUsers.length} 人
         </p>

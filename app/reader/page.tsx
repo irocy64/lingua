@@ -18,6 +18,7 @@ export default async function ReaderListPage() {
     <main className="mx-auto max-w-5xl px-4 py-8">
       <div className="flex items-center justify-between">
         <div>
+          <p className="sci-kicker mb-1">READING BAY</p>
           <h1 className="text-2xl font-bold">阅读</h1>
           <p className="mt-1 text-sm text-slate-600">
             导入你感兴趣的文章，在阅读中积累生词。
