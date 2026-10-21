@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import type { LookupResult } from "@/server/lookup";
 import type { Card } from "@/db/schema";
 import { SpeakButton } from "@/components/speak-button";
+import { bingSearchUrl, bingTranslateUrl } from "@/lib/search-links";
 
 export function WordPanel({
   word,
@@ -106,6 +107,26 @@ export function WordPanel({
             ) : (
               <p className="text-sm text-slate-400">未查到释义，可手动加入后补充</p>
             )}
+            <div className="mt-3 flex flex-wrap gap-3 text-xs">
+              <a
+                href={bingSearchUrl(
+                  `${word} ${lang === "ja" ? "意味" : "meaning"}`
+                )}
+                target="_blank"
+                rel="noreferrer"
+                className="text-slate-400 underline hover:text-slate-700"
+              >
+                Bing 查词
+              </a>
+              <a
+                href={bingTranslateUrl(word, lang)}
+                target="_blank"
+                rel="noreferrer"
+                className="text-slate-400 underline hover:text-slate-700"
+              >
+                Bing 翻译
+              </a>
+            </div>
           </div>
         )}
 

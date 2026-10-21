@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { cards, decks } from "@/db/schema";
 import { requireUser } from "@/lib/access";
 import { isAiEnabledFor } from "@/server/ai-access";
+import { bingSearchUrl } from "@/lib/search-links";
 import { SpeakButton } from "@/components/speak-button";
 import { AddWordButton } from "@/features/search/add-word-button";
 import { AiWordNote } from "@/features/search/ai-word-note";
@@ -152,10 +153,20 @@ export default async function SearchPage({
       </form>
 
       {query && (
-        <p className="mt-4 text-xs text-slate-500">
-          找到 {results.length} 个结果
-          {results.length === 60 && "（仅显示前 60 个，请输入更精确的关键词）"}
-        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+          <span>
+            找到 {results.length} 个结果
+            {results.length === 60 && "（仅显示前 60 个，请输入更精确的关键词）"}
+          </span>
+          <a
+            href={bingSearchUrl(`${query} 释义`)}
+            target="_blank"
+            rel="noreferrer"
+            className="text-slate-400 underline hover:text-slate-700"
+          >
+            用 Bing 搜索「{query}」
+          </a>
+        </div>
       )}
 
       {!query && (

@@ -50,6 +50,15 @@ export const readingFeeds: FeedSource[] = [
     siteUrl: "https://www.japantimes.co.jp/",
   },
   {
+    id: "cgtn-world",
+    name: "CGTN World",
+    description: "中国国际电视台英文新闻，国内网络可直连",
+    url: "https://www.cgtn.com/subscribe/rss/section/world.xml",
+    lang: "en",
+    category: "news",
+    siteUrl: "https://www.cgtn.com/world",
+  },
+  {
     id: "nhk-news",
     name: "NHK 新闻",
     description: "NHK 日语新闻，练习日语阅读与新闻词汇",
