@@ -1,0 +1,35 @@
+name: Build Cloudflare bundle
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: file:./data/lingua.db
+      AUTH_SECRET: build-only-secret-please-change-1234567890
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build OpenNext bundle
+        run: npm run cf:build
+
+      - name: Report bundle size
+        run: |
+          du -sh .open-next
+          ls -lh .open-next/worker.js
+          gzip -c .open-next/worker.js | wc -c
+          find .open-next/assets -type f | wc -l

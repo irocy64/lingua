@@ -8,6 +8,9 @@
     "postbuild": "node scripts/prepare-standalone.mjs",
     "start": "next start",
     "start:standalone": "node .next/standalone/server.js",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare preview",
+    "cf:deploy": "opennextjs-cloudflare deploy",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
@@ -32,6 +35,7 @@
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.16.4",
+    "@opennextjs/cloudflare": "^1.20.12",
     "@tailwindcss/turbopack": "^4",
     "@types/bcryptjs": "^2.4.6",
     "@types/better-sqlite3": "^9.6.0",
@@ -45,6 +49,14 @@
     "tsx": "^4.23.15",
     "typescript": "^5",
     "vite": "^8.3.4",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "wrangler": "^4.151.3"
+  },
+  "allowScripts": {
+    "esbuild@0.18.20": true,
+    "esbuild@0.25.12": true,
+    "esbuild@0.28.2": true,
+    "workerd@1.20261019.1": true,
+    "unrs-resolver@1.12.2": true
   }
 }
