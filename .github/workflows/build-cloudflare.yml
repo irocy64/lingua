@@ -41,4 +41,4 @@ jobs:
           npx wrangler deploy --dry-run --outdir cf-dist --metafile=cf-meta.json
           du -sh cf-dist
           ls -lh cf-dist
-          node -e "const m=require('./cf-meta.json');const rows=Object.entries(m.inputs).map(([k,v])=>[k,v.bytesInOutput||0]).sort((a,b)=>b[1]-a[1]).slice(0,20);for(const [k,v] of rows) console.log((v/1024).toFixed(1)+' KB', k)"
+          node -e "const m=require('./cf-meta.json');const inputs=m.inputs||{};const first=Object.entries(inputs)[0];if(first)console.log('meta keys',Object.keys(first[1]));const rows=Object.entries(inputs).map(([k,v])=>[k,v.bytes||v.bytesInOutput||0]).sort((a,b)=>b[1]-a[1]).slice(0,25);for(const [k,v] of rows) console.log((v/1024).toFixed(1)+' KB', k)"
