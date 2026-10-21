@@ -71,15 +71,6 @@ export const listeningFeeds: FeedSource[] = [
     siteUrl: "https://www.bbc.co.uk/programmes/p02nq0gn",
   },
   {
-    id: "npr-planet-money",
-    name: "NPR · Planet Money",
-    description: "用轻松故事讲经济学，语速适中",
-    url: "https://www.npr.org/rss/podcast.php?id=510289",
-    lang: "en",
-    category: "podcast",
-    siteUrl: "https://www.npr.org/sections/money/",
-  },
-  {
     id: "bbc-6min-english",
     name: "BBC 6 Minute English",
     description: "六分钟英语，适合中高级听力训练",
@@ -88,6 +79,16 @@ export const listeningFeeds: FeedSource[] = [
     category: "learning",
     siteUrl:
       "https://www.bbc.co.uk/learningenglish/english/features/6-minute-english",
+  },
+  {
+    id: "bbc-learning-english-conversations",
+    name: "BBC Learning English Conversations",
+    description: "日常英语对话与地道表达，适合通勤泛听",
+    url: "https://podcasts.files.bbci.co.uk/p02pc9zn.rss",
+    lang: "en",
+    category: "learning",
+    siteUrl:
+      "https://www.bbc.co.uk/learningenglish/english/features/the-english-we-speak",
   },
 ];
 
