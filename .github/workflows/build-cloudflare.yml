@@ -25,7 +25,9 @@ jobs:
         run: npm ci
 
       - name: Build OpenNext bundle
-        run: npm run cf:build
+        run: |
+          mkdir -p data
+          npm run cf:build
 
       - name: Report bundle size
         run: |
