@@ -1,15 +1,18 @@
 /**
  * Lingua Service Worker（基础离线能力）
- * - 导航请求：网络优先，离线回退缓存（app shell）
+ * - 页面导航：只走网络，不缓存（避免缓存到流式渲染的半截页面/登录页）
  * - 静态资源（/_next/static、图标）：缓存优先
  * - 不缓存 API（含鉴权与 AI 请求）
  */
-const CACHE = "lingua-v1";
-const APP_SHELL = ["/dashboard", "/decks"];
+const CACHE = "lingua-v3";
+const OFFLINE_SHELL = ["/"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(APP_SHELL)).catch(() => {})
+    caches
+      .open(CACHE)
+      .then((cache) => cache.addAll(OFFLINE_SHELL))
+      .catch(() => {})
   );
   self.skipWaiting();
 });
@@ -30,10 +33,14 @@ self.addEventListener("fetch", (event) => {
   if (request.method !== "GET") return;
 
   const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith("/api/")) return;
 
   // 静态资源：缓存优先
-  if (url.pathname.startsWith("/_next/static") || /\.(png|svg|ico|jpg|jpeg)$/.test(url.pathname)) {
+  if (
+    url.pathname.startsWith("/_next/static") ||
+    /\.(png|svg|ico|jpg|jpeg|woff2?)$/.test(url.pathname)
+  ) {
     event.respondWith(
       caches.match(request).then(
         (cached) =>
@@ -48,16 +55,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 导航：网络优先，失败回退缓存
+  // 页面导航：只走网络；离线时回退到缓存的首页
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, copy));
-          return res;
-        })
-        .catch(() => caches.match(request).then((c) => c || caches.match("/dashboard")))
+      fetch(request).catch(() =>
+        caches.match("/").then((cached) => cached || Response.error())
+      )
     );
   }
 });

@@ -9,9 +9,12 @@ export function RegisterSw() {
     if (!("serviceWorker" in navigator)) return;
 
     const onLoad = () => {
-      navigator.serviceWorker.register("/sw.js").catch(() => {
-        // 注册失败不影响正常使用
-      });
+      navigator.serviceWorker
+        .register("/sw.js", { updateViaCache: "none" })
+        .then((registration) => registration.update())
+        .catch(() => {
+          // 注册失败不影响正常使用
+        });
     };
     window.addEventListener("load", onLoad);
     return () => window.removeEventListener("load", onLoad);
