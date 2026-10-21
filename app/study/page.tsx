@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { StudySession } from "@/features/study/study-session";
 import { requireUser } from "@/lib/access";
-import { isAiConfigured } from "@/lib/ai";
+import { isAiEnabledFor } from "@/server/ai-access";
 import { db } from "@/db";
 import { decks } from "@/db/schema";
 
@@ -16,7 +16,7 @@ export default async function StudyPage({
 }: {
   searchParams: Promise<{ deck?: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
   const { deck } = await searchParams;
   const deckOptions = await db
     .select({ id: decks.id, name: decks.name, language: decks.language })
@@ -27,7 +27,7 @@ export default async function StudyPage({
       <StudySession
         deck={deck}
         decks={deckOptions}
-        aiEnabled={isAiConfigured()}
+        aiEnabled={isAiEnabledFor(user.email)}
       />
     </Suspense>
   );

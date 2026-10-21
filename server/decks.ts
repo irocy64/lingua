@@ -9,6 +9,7 @@ interface TemplateCard {
   word: string;
   reading: string | null;
   meaning: string | null;
+  aiNote: string | null;
   lang: "en" | "ja";
 }
 
@@ -24,11 +25,16 @@ export async function ensureDeckCards(
       word: cards.word,
       reading: cards.reading,
       meaning: cards.meaning,
+      aiNote: cards.aiNote,
       lang: cards.lang,
     })
     .from(cards)
     .where(and(isNull(cards.userId), eq(cards.deckId, deckId)))
-    .orderBy(limit ? sql`random()` : cards.id);
+    .orderBy(
+      limit
+        ? sql`case when ${cards.aiNote} is not null then 0 else 1 end, random()`
+        : cards.id
+    );
 
   if (templates.length === 0) return 0;
 
@@ -62,6 +68,7 @@ export async function ensureDeckCards(
           word: t.word,
           reading: t.reading,
           meaning: t.meaning,
+          aiNote: t.aiNote,
           lang: t.lang,
           state: "new" as const,
         }))

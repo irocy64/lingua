@@ -14,6 +14,24 @@ function numberEnv(name: string, fallback: number): number {
   return Number.isFinite(value) && value > 0 ? value : fallback;
 }
 
+function allowedEmailList(): string[] {
+  return (process.env.AI_ALLOWED_EMAILS ?? "")
+    .split(",")
+    .map((item) => item.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+/** 邮箱是否在白名单内（未配置白名单时视为全部允许） */
+export function isAiAllowedEmail(email: string | null): boolean {
+  const allowed = allowedEmailList();
+  return allowed.length === 0 || allowed.includes((email ?? "").toLowerCase());
+}
+
+/** 当前请求者是否应该看到/使用 AI（已配置 key 且在名单内） */
+export function isAiEnabledFor(email: string | null): boolean {
+  return Boolean(process.env.AI_API_KEY) && isAiAllowedEmail(email);
+}
+
 /**
  * AI 访问控制：
  * 1. 若配置 AI_ALLOWED_EMAILS（逗号分隔），仅白名单邮箱可用；
@@ -24,15 +42,7 @@ export async function checkAiAccess(
   userId: string,
   email: string | null
 ): Promise<AiAccessResult> {
-  const allowedEmails = (process.env.AI_ALLOWED_EMAILS ?? "")
-    .split(",")
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean);
-
-  if (
-    allowedEmails.length > 0 &&
-    !allowedEmails.includes((email ?? "").toLowerCase())
-  ) {
+  if (!isAiAllowedEmail(email)) {
     return {
       allowed: false,
       status: 403,

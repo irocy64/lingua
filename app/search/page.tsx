@@ -4,8 +4,10 @@ import { and, eq, inArray, isNull, like, or } from "drizzle-orm";
 import { db } from "@/db";
 import { cards, decks } from "@/db/schema";
 import { requireUser } from "@/lib/access";
+import { isAiEnabledFor } from "@/server/ai-access";
 import { SpeakButton } from "@/components/speak-button";
 import { AddWordButton } from "@/features/search/add-word-button";
+import { AiWordNote } from "@/features/search/ai-word-note";
 
 export const metadata = {
   title: "搜词",
@@ -30,6 +32,7 @@ export default async function SearchPage({
   await connection();
   const user = await requireUser();
   const userId = user.id;
+  const aiEnabled = isAiEnabledFor(user.email);
 
   const { q = "", lang: rawLang } = await searchParams;
   const query = q.trim();
@@ -195,6 +198,14 @@ export default async function SearchPage({
                 <p className="mt-1 text-sm text-slate-700">{result.meaning}</p>
                 {deckLabel && (
                   <p className="mt-1 text-xs text-slate-400">{deckLabel}</p>
+                )}
+                {aiEnabled && (
+                  <AiWordNote
+                    word={result.word}
+                    lang={result.lang}
+                    meaning={result.meaning}
+                    reading={result.reading}
+                  />
                 )}
               </div>
               <AddWordButton
