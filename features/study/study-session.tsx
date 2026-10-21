@@ -72,9 +72,11 @@ const gradeButtons: {
 export function StudySession({
   deck,
   decks = [],
+  aiEnabled = false,
 }: {
   deck?: string;
   decks?: { id: string; name: string; language: string }[];
+  aiEnabled?: boolean;
 }) {
   const router = useRouter();
   const [queue, setQueue] = useState<QueueItem[]>([]);
@@ -374,7 +376,7 @@ export function StudySession({
     </div>
   );
 
-  const aiSection = (
+  const aiSection = aiEnabled ? (
     <AiNoteSection
       lang={current.card.lang}
       note={aiNote}
@@ -382,7 +384,7 @@ export function StudySession({
       error={aiError?.id === current.card.id ? aiError.message : undefined}
       onGenerate={loadAiNote}
     />
-  );
+  ) : null;
 
   return (
     <div className="mx-auto max-w-xl px-4 py-10">

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { StudySession } from "@/features/study/study-session";
 import { requireUser } from "@/lib/access";
+import { isAiConfigured } from "@/lib/ai";
 import { db } from "@/db";
 import { decks } from "@/db/schema";
 
@@ -23,7 +24,11 @@ export default async function StudyPage({
 
   return (
     <Suspense fallback={<p className="py-20 text-center text-slate-500">加载中…</p>}>
-      <StudySession deck={deck} decks={deckOptions} />
+      <StudySession
+        deck={deck}
+        decks={deckOptions}
+        aiEnabled={isAiConfigured()}
+      />
     </Suspense>
   );
 }
