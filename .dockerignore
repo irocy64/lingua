@@ -1,5 +1,8 @@
 node_modules
 .next
+.open-next
+.netlify
+cf-dist
 .git
 npm-debug.log
 README.md
@@ -11,5 +14,6 @@ data
 *.db-wal
 *.db-shm
 .env
+.env.local
 .vercel
 coverage
