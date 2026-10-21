@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Card } from "@/db/schema";
 import { SpeakButton } from "@/components/speak-button";
 
@@ -10,6 +11,8 @@ type Grade = "again" | "hard" | "good" | "easy";
 interface QueueItem {
   card: Card;
   isNew: boolean;
+  /** 本会话内答错后回炉重学 */
+  relearn?: boolean;
 }
 
 interface SessionStats {
@@ -62,7 +65,14 @@ const gradeButtons: {
   },
 ];
 
-export function StudySession({ deck }: { deck?: string }) {
+export function StudySession({
+  deck,
+  decks = [],
+}: {
+  deck?: string;
+  decks?: { id: string; name: string; language: string }[];
+}) {
+  const router = useRouter();
   const [queue, setQueue] = useState<QueueItem[]>([]);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -71,11 +81,14 @@ export function StudySession({ deck }: { deck?: string }) {
   const [error, setError] = useState("");
   const [stats, setStats] = useState<SessionStats>(emptyStats);
   const [meta, setMeta] = useState<QueueMeta | null>(null);
+  const requeuedRef = useRef<Set<string>>(new Set());
 
   const applyQueue = useCallback((data: QueueData) => {
+    requeuedRef.current = new Set();
+    // 先复习到期卡片，再学新词，符合间隔重复的优先顺序
     const items: QueueItem[] = [
-      ...data.newCards.map((card) => ({ card, isNew: true })),
       ...data.dueCards.map((card) => ({ card, isNew: false })),
+      ...data.newCards.map((card) => ({ card, isNew: true })),
     ];
     setQueue(items);
     setIndex(0);
@@ -143,6 +156,14 @@ export function StudySession({ deck }: { deck?: string }) {
           reviewed: prev.reviewed + (current.isNew ? 0 : 1),
           again: prev.again + (grade === "again" ? 1 : 0),
         }));
+        // 答错的词在本次会话末尾再出现一次，形成短时记忆强化
+        if (grade === "again" && !requeuedRef.current.has(current.card.id)) {
+          requeuedRef.current.add(current.card.id);
+          setQueue((prev) => [
+            ...prev,
+            { card: current.card, isNew: false, relearn: true },
+          ]);
+        }
         setFlipped(false);
         setIndex((i) => i + 1);
       } catch (e) {
@@ -268,6 +289,32 @@ export function StudySession({ deck }: { deck?: string }) {
 
   return (
     <div className="mx-auto max-w-xl px-4 py-10">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <select
+          value={deck ?? ""}
+          onChange={(event) => {
+            const value = event.target.value;
+            router.push(
+              value ? `/study?deck=${encodeURIComponent(value)}` : "/study"
+            );
+          }}
+          className="min-w-0 flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-sm"
+        >
+          <option value="">全部词书（默认 CET-6 起步）</option>
+          {decks.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.name}
+            </option>
+          ))}
+        </select>
+        <Link
+          href="/decks"
+          className="shrink-0 text-xs text-slate-500 hover:text-slate-800"
+        >
+          管理词书
+        </Link>
+      </div>
+
       <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
         <span>
           新学 {liveNew}/{meta?.targets.dailyNewTarget ?? 15} · 复习{" "}
@@ -286,7 +333,11 @@ export function StudySession({ deck }: { deck?: string }) {
 
       <div className="mb-4 text-center text-sm text-slate-500">
         {index + 1} / {queue.length}
-        {current.isNew ? (
+        {current.relearn ? (
+          <span className="ml-2 rounded-full bg-rose-100 px-2 py-0.5 text-xs text-rose-700">
+            回炉重学
+          </span>
+        ) : current.isNew ? (
           <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs text-emerald-700">
             新词
           </span>

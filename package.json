@@ -11,6 +11,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:seed": "tsx db/seed.ts",
+    "db:wordlists": "node scripts/build-wordlists.mjs",
     "test": "vitest run"
   },
   "dependencies": {

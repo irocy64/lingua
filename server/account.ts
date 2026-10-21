@@ -1,8 +1,9 @@
-import { eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { randomUUID } from "node:crypto";
 import { db } from "@/db";
-import { users, cards, type User } from "@/db/schema";
+import { users, type User } from "@/db/schema";
+import { ensureDeckCards, syncJoinedDeckCards } from "@/server/decks";
 
 export async function findUserByEmail(email: string): Promise<User | undefined> {
   const rows = await db.select().from(users).where(eq(users.email, email));
@@ -15,50 +16,16 @@ export async function findUserById(id: string): Promise<User | undefined> {
 }
 
 /**
- * 把内置词书的公共模板（userId=null）同步为用户私有卡片。
- * 已存在的词（按 userId + word 去重）不会被覆盖，因此可重复调用。
+ * 同步用户已加入的内置词书（补齐模板中新增的词，不覆盖学习进度）。
  * @returns 本次新增的卡片数量
  */
 export async function syncBuiltinCards(userId: string): Promise<number> {
-  const templates = await db.select().from(cards).where(isNull(cards.userId));
-  if (templates.length === 0) return 0;
-
-  const owned = await db
-    .select({ word: cards.word, lang: cards.lang })
-    .from(cards)
-    .where(eq(cards.userId, userId));
-  const ownedKeys = new Set(owned.map((row) => `${row.lang}:${row.word}`));
-
-  const seen = new Set<string>();
-  const missing = templates.filter((t) => {
-    const key = `${t.lang}:${t.word}`;
-    if (ownedKeys.has(key) || seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
-  if (missing.length === 0) return 0;
-
-  await db.insert(cards).values(
-    missing.map((t) => ({
-      id: randomUUID(),
-      userId,
-      deckId: t.deckId,
-      word: t.word,
-      reading: t.reading,
-      meaning: t.meaning,
-      example: t.example,
-      exampleTranslation: t.exampleTranslation,
-      lang: t.lang,
-      state: "new" as const,
-    }))
-  );
-
-  return missing.length;
+  return syncJoinedDeckCards(userId);
 }
 
-/** 为新用户初始化独立的词书卡片 */
+/** 为新用户准备第一批 CET-6 词（按需分批加载，避免注册时写入上万条） */
 async function provisionUserCards(userId: string): Promise<void> {
-  await syncBuiltinCards(userId);
+  await ensureDeckCards(userId, "builtin-cet6", 300);
 }
 
 export async function registerUser(

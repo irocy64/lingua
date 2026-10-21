@@ -1,7 +1,8 @@
-import { and, asc, eq, lte, ne } from "drizzle-orm";
+import { and, asc, eq, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { cards, reviews, type Card } from "@/db/schema";
 import { isMastered, scheduleCard, type Grade } from "@/lib/srs";
+import { ensureDeckCards } from "@/server/decks";
 import {
   getDailyTargets,
   getTodayCounts,
@@ -33,6 +34,21 @@ export async function getStudyQueue(
     0,
     targets.dailyReviewTarget - today.reviewed
   );
+
+  // 新词不足时按需补充一批（避免把上万词一次复制给每个用户）
+  const [ownedNewRow] = await db
+    .select({ count: sql<number>`count(*)`.as("count") })
+    .from(cards)
+    .where(
+      and(
+        eq(cards.userId, userId),
+        eq(cards.state, "new"),
+        ...(deckId ? [eq(cards.deckId, deckId)] : [])
+      )
+    );
+  if (Number(ownedNewRow?.count ?? 0) < targets.dailyNewTarget) {
+    await ensureDeckCards(userId, deckId ?? "builtin-cet6", 300);
+  }
 
   const newCards: Card[] =
     newRemaining === 0

@@ -1,14 +1,45 @@
 /**
- * 种子脚本：写入内置词书与示例卡片（幂等，重复执行不会产生重复数据）
+ * 种子脚本：把 db/wordlists/*.json 写入内置词书与模板卡片。
+ * 幂等：重复执行会更新词书信息，并重建各词书的模板卡片（不影响用户自己的卡片）。
  * 运行：npm run db:seed
- * 对 Turso 远程库同样适用（DATABASE_URL 指向 libsql://... 并设置 DATABASE_AUTH_TOKEN）
  */
+import fs from "node:fs";
+import path from "node:path";
+import { and, eq, isNull } from "drizzle-orm";
 import { db } from "./index";
-import { decks, cards } from "./schema";
-import { seedDecks } from "./seed-data";
+import { cards, decks } from "./schema";
+
+const INSERT_CHUNK = 300;
+
+interface WordlistCard {
+  id: string;
+  word: string;
+  reading?: string;
+  meaning: string;
+}
+
+interface WordlistDeck {
+  id: string;
+  name: string;
+  language: "en" | "ja";
+  description: string;
+  cards: WordlistCard[];
+}
 
 async function run() {
-  for (const deck of seedDecks) {
+  const dir = path.join(process.cwd(), "db", "wordlists");
+  const files = fs
+    .readdirSync(dir)
+    .filter((file) => file.endsWith(".json"))
+    .sort();
+
+  let totalCards = 0;
+
+  for (const file of files) {
+    const deck: WordlistDeck = JSON.parse(
+      fs.readFileSync(path.join(dir, file), "utf8")
+    );
+
     await db
       .insert(decks)
       .values({
@@ -18,29 +49,49 @@ async function run() {
         description: deck.description,
         isBuiltin: true,
       })
-      .onConflictDoNothing();
+      .onConflictDoUpdate({
+        target: decks.id,
+        set: {
+          name: deck.name,
+          language: deck.language,
+          description: deck.description,
+          isBuiltin: true,
+        },
+      });
 
-    for (const card of deck.cards) {
+    // 重建模板卡片（userId = null）；用户已复制的卡片不受影响
+    await db
+      .delete(cards)
+      .where(and(isNull(cards.userId), eq(cards.deckId, deck.id)));
+
+    for (let i = 0; i < deck.cards.length; i += INSERT_CHUNK) {
+      const chunk = deck.cards.slice(i, i + INSERT_CHUNK);
       await db
         .insert(cards)
-        .values({
-          id: card.id,
-          deckId: deck.id,
-          word: card.word,
-          reading: card.reading ?? null,
-          meaning: card.meaning,
-          example: card.example ?? null,
-          exampleTranslation: card.exampleTranslation ?? null,
-          lang: deck.language,
-          state: "new",
-        })
+        .values(
+          chunk.map((card) => ({
+            id: card.id,
+            deckId: deck.id,
+            word: card.word,
+            reading: card.reading ?? null,
+            meaning: card.meaning,
+            lang: deck.language,
+            state: "new" as const,
+          }))
+        )
         .onConflictDoNothing();
     }
+
+    totalCards += deck.cards.length;
+    console.log(`${deck.id}: ${deck.cards.length} cards (${deck.name})`);
   }
 
-  const allDecks = await db.select().from(decks);
-  const allCards = await db.select().from(cards);
-  console.log(`Seed completed: ${allDecks.length} decks, ${allCards.length} cards.`);
+  console.log(
+    `Seed completed: ${files.length} decks, ${totalCards} template cards.`
+  );
 }
 
-run();
+run().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

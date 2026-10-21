@@ -24,6 +24,8 @@ export interface DashboardSummary extends DailyTargets, TodayCounts {
   masteredCount: number;
   streakDays: number;
   last30Days: { date: string; count: number }[];
+  /** 未来 7 天（含今天）到期量，用于展示记忆曲线 */
+  dueForecast: { date: string; count: number }[];
 }
 
 /** 读取用户的每日目标（用户不存在时回退默认值） */
@@ -124,6 +126,39 @@ export async function getDashboardSummary(
     last30Days.push({ date: key, count: countByDay.get(key) ?? 0 });
   }
 
+  // 未来 7 天到期量（按本地日期）
+  const forecastStart = startOfDay(now);
+  const forecastEnd = addDays(forecastStart, 8);
+  const forecastRows = await db
+    .select({
+      date: sql<string>`date(${cards.dueAt}, 'unixepoch', 'localtime')`.as(
+        "date"
+      ),
+      count: sql<number>`count(*)`.as("count"),
+    })
+    .from(cards)
+    .where(
+      and(
+        eq(cards.userId, userId),
+        ne(cards.state, "new"),
+        ne(cards.state, "suspended"),
+        gte(cards.dueAt, forecastStart),
+        lte(cards.dueAt, forecastEnd)
+      )
+    )
+    .groupBy(sql`date(${cards.dueAt}, 'unixepoch', 'localtime')`);
+
+  const forecastMap = new Map<string, number>();
+  for (const row of forecastRows) {
+    forecastMap.set(row.date, Number(row.count));
+  }
+  const dueForecast: { date: string; count: number }[] = [];
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(now, i);
+    const key = dayKey(d);
+    dueForecast.push({ date: key, count: forecastMap.get(key) ?? 0 });
+  }
+
   const [targets, today] = await Promise.all([
     getDailyTargets(userId),
     getTodayCounts(userId),
@@ -136,6 +171,7 @@ export async function getDashboardSummary(
     masteredCount,
     streakDays,
     last30Days,
+    dueForecast,
     ...targets,
     ...today,
   };

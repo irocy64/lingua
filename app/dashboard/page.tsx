@@ -60,6 +60,10 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
   const s = await getDashboardSummary(session.user.id);
+  const maxForecast = Math.max(
+    1,
+    ...s.dueForecast.map((item) => item.count)
+  );
 
   return (
     <main className="mx-auto max-w-5xl px-4 py-8">
@@ -143,6 +147,34 @@ export default async function DashboardPage() {
               title={`${d.date}：${d.count} 次`}
               className={`aspect-square rounded ${heatColor(d.count)}`}
             />
+          ))}
+        </div>
+      </div>
+
+      {/* 未来 7 天到期量 */}
+      <div className="mt-6 rounded-xl border border-slate-200 p-6">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-sm font-semibold">未来 7 天复习量</h2>
+          <p className="text-xs text-slate-400">按 FSRS 记忆曲线自动排期</p>
+        </div>
+        <div className="mt-5 flex h-32 items-end gap-2">
+          {s.dueForecast.map((d) => (
+            <div
+              key={d.date}
+              className="flex flex-1 flex-col items-center justify-end gap-1"
+            >
+              <span className="text-[10px] text-slate-400">{d.count}</span>
+              <div
+                className="w-full rounded-t bg-sky-500/80 transition-all"
+                style={{
+                  height: `${Math.max(4, (d.count / maxForecast) * 100)}%`,
+                }}
+                title={`${d.date}：${d.count} 张到期`}
+              />
+              <span className="text-[10px] text-slate-400">
+                {d.date.slice(5)}
+              </span>
+            </div>
           ))}
         </div>
       </div>

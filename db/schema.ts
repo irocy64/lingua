@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  index,
   integer,
   sqliteTable,
   text,
@@ -62,11 +63,20 @@ export const cards = sqliteTable(
       .default(sql`(unixepoch())`),
   },
   (table) => [
-    uniqueIndex("cards_user_word_lang_idx").on(
+    // 同一词书内去重；不同词书允许同一单词各自独立调度
+    uniqueIndex("cards_user_deck_word_lang_idx").on(
       table.userId,
+      table.deckId,
       table.word,
       table.lang
     ),
+    // 学习队列 / 统计查询
+    index("cards_user_state_due_idx").on(
+      table.userId,
+      table.state,
+      table.dueAt
+    ),
+    index("cards_deck_template_idx").on(table.deckId, table.userId),
   ]
 );
 
@@ -87,7 +97,9 @@ export const reviews = sqliteTable("reviews", {
   reviewedAt: integer("reviewed_at", { mode: "timestamp" })
     .notNull()
     .default(sql`(unixepoch())`),
-});
+}, (table) => [
+  index("reviews_user_reviewed_idx").on(table.userId, table.reviewedAt),
+]);
 
 // ---------- 阅读材料 ----------
 export const texts = sqliteTable("texts", {

@@ -105,9 +105,9 @@ export function SettingsForm({
       </form>
 
       <div className="border-t border-slate-100 pt-4">
-        <p className="text-sm font-medium">内置词书同步</p>
+        <p className="text-sm font-medium">已加入词书补全</p>
         <p className="mt-1 text-xs text-slate-500">
-          把新上线的内置词条补充到你的词库，已学过的词不会被覆盖。
+          补全新上线的词条到已加入的词书，已学过的词不会被覆盖；未加入的词书请到词书页添加。
         </p>
         <button
           type="button"
@@ -115,7 +115,7 @@ export function SettingsForm({
           disabled={syncing}
           className="mt-3 w-full rounded-lg border border-slate-300 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:opacity-50"
         >
-          {syncing ? "同步中…" : "同步内置词书"}
+          {syncing ? "同步中…" : "补全已加入词书"}
         </button>
         {syncMessage && (
           <p className="mt-2 text-center text-xs text-slate-500">{syncMessage}</p>
